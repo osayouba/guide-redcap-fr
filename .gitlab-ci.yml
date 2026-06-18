@@ -67,4 +67,4 @@ pages:
     - build
 
   only:
-    - main   # ne déployer que depuis main, pas les MR
+    - master   # ne déployer que depuis master, pas les MR
