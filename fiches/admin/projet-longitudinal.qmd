@@ -1,16 +1,165 @@
 # Projets longitudinaux
 
-> Événements, bras, matrice des instruments.
+> Un projet longitudinal REDCap permet de collecter des données à plusieurs moments dans le temps pour chaque participant, selon une structure d'événements et de bras définie à l'avance.
 
-::: {.callout-note}
-## Fiche en cours de rédaction
-Cette fiche est en construction. [Contribuez sur GitLab !](https://gitlab.institutionnel.org/redcap-guide-fr/-/issues/new)
+## Concepts fondamentaux
+
+Un projet longitudinal repose sur trois notions imbriquées :
+
+**Bras (Arms)**
+: Un bras représente un groupe de participants suivant le même calendrier de visites. Dans un essai à deux bras (traitement A vs traitement B), chaque bras a ses propres événements.
+
+**Événements (Events)**
+: Un événement correspond à un moment de collecte de données : une visite, un prélèvement, un appel téléphonique. Chaque événement a un nom unique et peut être associé à un ou plusieurs instruments.
+
+**Matrice des instruments**
+: Pour chaque événement, on définit quels instruments (formulaires) sont actifs. Un même instrument peut être utilisé dans plusieurs événements.
+
+```
+Bras 1 (Traitement A)
+├── Événement 1 : Screening
+│   ├── Consentement
+│   └── Critères d'inclusion
+├── Événement 2 : Inclusion (J0)
+│   ├── Données démographiques
+│   ├── Examen clinique
+│   └── Biologie
+├── Événement 3 : Visite M3
+│   ├── Examen clinique      ← même instrument que J0
+│   └── Biologie             ← même instrument que J0
+└── Événement 4 : Fin d'étude
+    ├── Examen clinique
+    └── Statut vital
+```
+
+---
+
+## Activer le mode longitudinal
+
+1. **Project Setup → Main project settings**
+2. Cocher **Use longitudinal data collection with defined events**
+3. Cliquer sur **Save**
+
+::: {.callout-important}
+## À faire avant toute saisie
+Le mode longitudinal doit être activé avant de saisir des données. Le basculer sur un projet existant avec des données est possible mais risqué et nécessite l'intervention d'un administrateur.
 :::
 
-## Introduction
+---
 
-*(À rédiger)*
+## Définir les événements
+
+1. **Project Setup → Define My Events**
+2. Pour chaque événement, renseigner :
+   - **Event name** : nom affiché (ex. `Screening`, `Inclusion J0`, `Visite M3`)
+   - **Offset** : nombre de jours depuis l'événement de référence (facultatif, utilisé dans le calendrier)
+   - **Unique event name** : généré automatiquement (ex. `screening_arm_1`) — ne peut pas être modifié après création
+3. Cliquer sur **Add new event**
+
+::: {.callout-tip}
+## Convention de nommage des événements
+Utilisez des noms courts et explicites. Le nom unique généré automatiquement sera utilisé dans les branching logics et dans l'API — choisissez un nom d'événement qui donnera un nom unique lisible.
+
+| Nom saisi | Nom unique généré |
+|---|---|
+| `Screening` | `screening_arm_1` |
+| `Inclusion J0` | `inclusion_j0_arm_1` |
+| `Visite M3` | `visite_m3_arm_1` |
+:::
+
+---
+
+## Gérer plusieurs bras
+
+Si votre étude a plusieurs groupes de participants (essai randomisé, sous-études) :
+
+1. **Define My Events → Add Arm**
+2. Nommer le bras (ex. `Bras A`, `Bras B`)
+3. Définir les événements propres à chaque bras
+4. Les participants sont affectés à un bras lors de leur inclusion (champ `redcap_event_name` ou DAG)
+
+::: {.callout-note}
+## Bras unique
+Si tous vos participants suivent le même calendrier, un seul bras suffit. REDCap crée un bras par défaut (`Arm 1`).
+:::
+
+---
+
+## Matrice des instruments (Designate Instruments)
+
+C'est l'étape la plus importante : pour chaque événement, vous cochez les instruments qui doivent être remplis.
+
+1. **Project Setup → Designate Instruments for My Events**
+2. Un tableau croise événements (colonnes) et instruments (lignes)
+3. Cocher les cases correspondant aux instruments actifs pour chaque événement
+
+::: {.callout-warning}
+## Un instrument non coché n'apparaît pas dans la fiche patient
+Si un investigateur ne voit pas un formulaire lors d'une visite, vérifiez d'abord la matrice — c'est la cause la plus fréquente.
+:::
+
+---
+
+## Navigation dans une fiche patient longitudinale
+
+En mode longitudinal, la fiche patient (Record Home Page) affiche un **tableau de bord** avec :
+
+- Les événements en colonnes
+- Les instruments en lignes
+- Des icônes de statut pour chaque case (vide, incomplet, non vérifié, complet)
+
+Les couleurs des icônes correspondent aux statuts de complétion :
+- ⚪ Gris : non commencé
+- 🔴 Rouge : incomplet
+- 🟡 Jaune : non vérifié
+- 🟢 Vert : complet
+
+---
+
+## Export des données longitudinales
+
+À l'export, chaque ligne du CSV correspond à **un enregistrement × un événement**. La colonne `redcap_event_name` identifie l'événement.
+
+```r
+library(REDCapR)
+
+ds <- redcap_read(
+  redcap_uri = Sys.getenv("REDCAP_URI"),
+  token      = Sys.getenv("REDCAP_TOKEN")
+)$data
+
+# Filtrer sur un événement spécifique
+ds_inclusion <- ds[ds$redcap_event_name == "inclusion_j0_arm_1", ]
+```
+
+Pour travailler en format large (une ligne par participant) :
+
+```r
+library(tidyr)
+library(dplyr)
+
+ds_large <- ds |>
+  select(record_id, redcap_event_name, age, sexe, charge_virale) |>
+  pivot_wider(
+    names_from  = redcap_event_name,
+    values_from = c(charge_virale)
+  )
+```
+
+---
+
+## Points d'attention
+
+- Les **champs calculés** peuvent référencer des données d'autres événements avec la syntaxe `[nom_evenement][nom_champ]`
+- Les **Smart Variables** `[event-name]` et `[event-label]` permettent de personnaliser les alertes par événement
+- Le **calendrier REDCap** (Scheduling module) permet de planifier les visites à partir des dates saisies et des offsets définis
+- Les **instruments répétables** permettent de saisir plusieurs occurrences d'un formulaire au sein d'un même événement → voir [Fiche : Instruments répétables](instruments-repetables.qmd)
+
+---
 
 ## Références
 
-- [Documentation REDCap Community](https://community.projectredcap.org/)
+- [Fiche : Créer un projet REDCap](creer-projet.qmd)
+- [Fiche : Instruments répétables](instruments-repetables.qmd)
+- [Fiche : Branching logic](branching-logic.qmd)
+- [Fiche : Export et API REDCap](../api-r/api-introduction.qmd)

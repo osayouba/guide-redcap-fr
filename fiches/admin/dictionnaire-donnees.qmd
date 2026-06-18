@@ -1,16 +1,178 @@
 # Concevoir un dictionnaire de données
 
-> Instruments, champs, types de variables, validation.
+> Le dictionnaire de données *(Data Dictionary)* est le cœur d'un projet REDCap. Il définit tous les instruments, champs et règles de validation.
 
-::: {.callout-note}
-## Fiche en cours de rédaction
-Cette fiche est en construction. [Contribuez sur GitLab !](https://gitlab.institutionnel.org/redcap-guide-fr/-/issues/new)
+## Structure générale
+
+Un dictionnaire REDCap est organisé en **instruments** (formulaires), eux-mêmes composés de **champs** (variables). Chaque champ a un type, des options de validation et éventuellement une logique d'affichage conditionnelle.
+
+```
+Projet
+├── Instrument 1 (ex. Inclusion)
+│   ├── Champ 1 : date_inclusion
+│   ├── Champ 2 : site
+│   └── Champ 3 : consentement
+├── Instrument 2 (ex. Données démographiques)
+│   ├── Champ 1 : age
+│   └── Champ 2 : sexe
+└── ...
+```
+
+---
+
+## Types de champs
+
+| Type | Description | Exemple |
+|---|---|---|
+| `text` | Texte libre ou valeur numérique avec validation | Date, âge, poids |
+| `notes` | Zone de texte multiligne | Commentaires libres |
+| `radio` | Choix unique parmi une liste | Sexe, statut vital |
+| `checkbox` | Choix multiples | Symptômes, comorbidités |
+| `dropdown` | Liste déroulante (choix unique) | Pays, site |
+| `calc` | Champ calculé (formule) | IMC, score |
+| `slider` | Échelle visuelle analogique | EVA douleur |
+| `file` | Pièce jointe | Consentement scanné |
+| `descriptive` | Texte informatif sans saisie | Instructions, titres de section |
+
+::: {.callout-tip}
+## radio vs dropdown
+Utilisez `radio` pour les listes courtes (≤ 6 options) — les choix sont tous visibles. Utilisez `dropdown` pour les listes longues — l'interface reste compacte.
 :::
 
-## Introduction
+---
 
-*(À rédiger)*
+## Validation des champs texte
+
+Pour les champs de type `text`, REDCap propose des validations intégrées :
+
+| Validation | Format attendu |
+|---|---|
+| `date_dmy` | JJ-MM-AAAA |
+| `date_mdy` | MM-JJ-AAAA |
+| `datetime_dmy` | JJ-MM-AAAA HH:MM |
+| `integer` | Nombre entier |
+| `number` | Nombre décimal |
+| `number_1dp` | Nombre à 1 décimale |
+| `email` | Adresse email |
+| `phone` | Numéro de téléphone |
+| `zipcode` | Code postal |
+
+On peut également définir des plages min/max pour les valeurs numériques (ex. âge entre 18 et 99).
+
+::: {.callout-important}
+## Cohérence des formats de date
+Choisissez un seul format de date pour tout le projet (`date_dmy` recommandé en contexte francophone) et ne le changez jamais une fois des données saisies.
+:::
+
+---
+
+## Nomenclature des champs
+
+Le nom de chaque champ (variable name) doit respecter des règles strictes :
+
+- Uniquement des lettres minuscules, chiffres et underscores `_`
+- Pas d'espace, pas d'accent, pas de tiret
+- Commencer par une lettre
+- Maximum 26 caractères
+- Unique dans tout le projet
+
+### Convention recommandée
+
+Adoptez un préfixe par instrument pour éviter les conflits et faciliter l'export :
+
+```
+incl_date          → date d'inclusion (instrument Inclusion)
+incl_site          → site (instrument Inclusion)
+demo_age           → âge (instrument Démographie)
+demo_sexe          → sexe (instrument Démographie)
+bio_charge_virale  → charge virale (instrument Biologie)
+```
+
+Pour les projets longitudinaux, les noms de champs sont partagés entre tous les événements — la convention de préfixe est donc encore plus importante.
+
+---
+
+## Gérer les choix (radio, checkbox, dropdown)
+
+Les choix sont saisis sous la forme `code, Label` séparés par des retours à la ligne :
+
+```
+1, Masculin
+2, Féminin
+3, Autre
+99, Non renseigné
+```
+
+::: {.callout-tip}
+## Toujours prévoir "Non renseigné"
+Ajoutez systématiquement une option `99, Non renseigné` ou `99, Inconnu` pour les champs où la donnée peut être manquante pour une raison légitime. Cela évite de laisser des champs vides qui seraient confondus avec des données non saisies.
+:::
+
+### Codes numériques vs texte
+
+REDCap accepte des codes texte (`m, Masculin`) mais les codes numériques sont fortement recommandés pour la compatibilité avec les logiciels statistiques (R, SPSS, SAS, Stata).
+
+---
+
+## Importer un dictionnaire via CSV
+
+Pour les projets complexes, il est plus efficace de préparer le dictionnaire dans un fichier CSV (Excel) et de l'importer.
+
+1. **Project Setup → Data Dictionary → Download current**  pour obtenir le modèle
+2. Modifier le CSV dans Excel
+3. **Upload** le fichier modifié
+
+Le CSV contient les colonnes suivantes :
+
+| Colonne | Description |
+|---|---|
+| `Variable / Field Name` | Nom du champ |
+| `Form Name` | Nom de l'instrument (en minuscules, sans espace) |
+| `Field Type` | Type de champ |
+| `Field Label` | Libellé affiché à l'utilisateur |
+| `Choices` | Options pour radio/checkbox/dropdown |
+| `Field Note` | Note d'aide sous le champ |
+| `Text Validation Type` | Type de validation |
+| `Text Validation Min` | Valeur minimale |
+| `Text Validation Max` | Valeur maximale |
+| `Required Field` | `y` si obligatoire |
+| `Branching Logic` | Condition d'affichage |
+| `Field Annotation` | Annotations CDASH, @HIDDEN, etc. |
+
+::: {.callout-warning}
+## Attention aux modifications en Production
+En statut Production, toute modification du dictionnaire (ajout, suppression, renommage de champ) doit être approuvée. La suppression d'un champ entraîne la perte définitive des données associées.
+:::
+
+---
+
+## Champs obligatoires
+
+Marquer un champ comme obligatoire (`Required`) empêche la sauvegarde du formulaire si ce champ est vide. À utiliser avec discernement :
+
+- ✅ Obligatoire : identifiant, date de visite, critère principal
+- ❌ Pas obligatoire : données manquantes acceptables cliniquement, données recueillies plus tard
+
+---
+
+## Annotations de champ utiles
+
+Les annotations permettent d'ajouter des comportements spéciaux :
+
+| Annotation | Effet |
+|---|---|
+| `@HIDDEN` | Masque le champ à la saisie (visible à l'export) |
+| `@READONLY` | Champ non modifiable par l'utilisateur |
+| `@DEFAULT='valeur'` | Valeur par défaut pré-remplie |
+| `@NOW` | Pré-remplit avec la date/heure actuelle |
+| `@USERNAME` | Pré-remplit avec le nom de l'utilisateur connecté |
+| `@CALCTEXT(...)` | Affiche un texte calculé dynamiquement |
+
+---
 
 ## Références
 
-- [Documentation REDCap Community](https://community.projectredcap.org/)
+- [Fiche : Branching logic](branching-logic.qmd)
+- [Fiche : Champs calculés et Pipes](champs-calcules-pipes.qmd)
+- [Fiche : Nomenclature des variables](../data-manager/nomenclature-variables.qmd)
+- [Fiche : Projets longitudinaux](projet-longitudinal.qmd)

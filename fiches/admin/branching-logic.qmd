@@ -1,16 +1,163 @@
 # Branching logic
 
-> Syntaxe, opérateurs, cas d'usage, erreurs fréquentes.
+> La branching logic permet d'afficher ou masquer conditionnellement des champs selon les réponses déjà saisies. C'est l'un des mécanismes les plus puissants — et les plus sources d'erreurs — de REDCap.
 
-::: {.callout-note}
-## Fiche en cours de rédaction
-Cette fiche est en construction. [Contribuez sur GitLab !](https://gitlab.institutionnel.org/redcap-guide-fr/-/issues/new)
+## Principe
+
+Un champ avec une branching logic n'est **affiché que si la condition est vraie**. Si la condition est fausse, le champ est masqué et sa valeur est automatiquement **effacée** (mise à vide).
+
+::: {.callout-important}
+## La valeur est effacée quand le champ est masqué
+Si un champ redevient visible après avoir été masqué, l'utilisateur doit ressaisir la valeur. Il ne faut donc pas utiliser la branching logic pour de simples raisons esthétiques — réservez-la aux cas où la question n'a réellement pas de sens selon le contexte.
 :::
 
-## Introduction
+---
 
-*(À rédiger)*
+## Syntaxe de base
+
+La condition s'écrit entre crochets avec le nom du champ :
+
+```
+[nom_du_champ] = 'valeur'
+```
+
+### Opérateurs de comparaison
+
+| Opérateur | Signification |
+|---|---|
+| `=` | Égal à |
+| `<>` | Différent de |
+| `<` | Inférieur à |
+| `>` | Supérieur à |
+| `<=` | Inférieur ou égal |
+| `>=` | Supérieur ou égal |
+
+### Opérateurs logiques
+
+| Opérateur | Signification |
+|---|---|
+| `and` | ET logique |
+| `or` | OU logique |
+| `not` | Négation |
+
+---
+
+## Exemples courants
+
+### Afficher un champ selon un radio/dropdown
+
+```
+[sexe] = '2'
+```
+→ Affiche le champ uniquement si `sexe` vaut `2` (ex. Féminin)
+
+### Afficher si une valeur est saisie
+
+```
+[date_naissance] <> ''
+```
+→ Affiche le champ si `date_naissance` n'est pas vide
+
+### Condition sur un champ numérique
+
+```
+[age] >= 18
+```
+→ Affiche le champ si l'âge est supérieur ou égal à 18
+
+### Combiner plusieurs conditions
+
+```
+[sexe] = '2' and [age] >= 50
+```
+
+```
+[statut] = '1' or [statut] = '2'
+```
+
+### Condition sur une checkbox
+
+Pour les champs `checkbox`, chaque option est accessible individuellement avec la syntaxe `[champ___code]` :
+
+```
+[symptomes___1] = '1'
+```
+→ Affiché si l'option `1` de la checkbox `symptomes` est cochée
+
+::: {.callout-warning}
+## Syntaxe checkbox : triple underscore
+Le séparateur entre le nom du champ et le code de l'option est **trois underscores** `___`. C'est une source fréquente d'erreur.
+
+✅ `[symptomes___1] = '1'`  
+❌ `[symptomes_1] = '1'`
+:::
+
+---
+
+## Projets longitudinaux : référencer un autre événement
+
+Par défaut, la branching logic fait référence au champ dans **le même événement**. Pour référencer un champ dans un événement différent :
+
+```
+[screening_arm_1][critere_inclusion] = '1'
+```
+
+La syntaxe est `[nom_unique_evenement][nom_du_champ]`.
+
+::: {.callout-tip}
+## Trouver le nom unique d'un événement
+Dans **Project Setup → Define My Events**, chaque événement a un *Unique event name* généré automatiquement (ex. `screening_arm_1`, `mois_3_arm_1`). C'est ce nom qu'il faut utiliser dans la branching logic inter-événements.
+:::
+
+---
+
+## Utiliser l'éditeur drag-and-drop
+
+REDCap propose un éditeur visuel pour construire les conditions sans écrire la syntaxe manuellement :
+
+1. Dans le dictionnaire, cliquer sur l'icône de **branching logic** du champ concerné (icône entonnoir)
+2. L'éditeur s'ouvre avec deux modes :
+   - **Drag-and-drop** : glisser les champs depuis la liste de gauche
+   - **Advanced logic** : saisir la condition manuellement
+3. Tester la logique avec le bouton **Test** avant de sauvegarder
+
+::: {.callout-tip}
+## Toujours tester
+Le bouton **Test** simule l'affichage selon des valeurs que vous saisissez. Utilisez-le systématiquement avant de valider une logique complexe.
+:::
+
+---
+
+## Erreurs fréquentes
+
+| Erreur | Symptôme | Solution |
+|---|---|---|
+| Guillemets autour d'une valeur numérique manquants | Champ jamais affiché | Utiliser `[age] = '18'` même pour les nombres dans certains contextes |
+| Triple underscore manquant sur checkbox | Condition ignorée | Vérifier `[champ___code]` |
+| Nom de champ mal orthographié | Champ toujours affiché ou jamais affiché | Copier-coller le nom depuis le dictionnaire |
+| Référence à un événement sans préfixe | Valeur lue dans le mauvais événement | Ajouter `[nom_evenement]` devant |
+| Condition sur un champ calculé | Résultats imprévisibles | Éviter de conditionner sur des champs `calc` — préférer les champs sources |
+
+---
+
+## Bonnes pratiques
+
+- **Documenter** chaque branching logic dans la colonne *Field Note* ou dans un document de spécifications séparé
+- **Nommer les champs sources explicitement** : une logic `[diag_tb] = '1'` est bien plus lisible que `[q14b] = '1'`
+- **Éviter les chaînes longues** : si A conditionne B qui conditionne C qui conditionne D, une erreur sur A rend tout invisible sans message d'erreur
+- **Mettre à jour les logics** lors d'un renommage de champ — REDCap ne le fait pas automatiquement
+
+---
+
+## Impact sur l'export
+
+Les champs masqués au moment de la sauvegarde sont exportés comme **vides** (cellule vide dans le CSV). Il n'est pas possible de distinguer à l'export si un champ est vide parce qu'il était masqué ou parce qu'il n'a pas été rempli. Anticipez cela dans vos règles de qualité des données.
+
+---
 
 ## Références
 
-- [Documentation REDCap Community](https://community.projectredcap.org/)
+- [Fiche : Concevoir un dictionnaire de données](dictionnaire-donnees.qmd)
+- [Fiche : Champs calculés et Pipes](champs-calcules-pipes.qmd)
+- [Fiche : Projets longitudinaux](projet-longitudinal.qmd)
+- [Fiche : Règles de qualité des données](../data-manager/data-quality.qmd)

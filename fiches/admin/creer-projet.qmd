@@ -1,16 +1,116 @@
 # Créer un projet REDCap
 
-> Types de projets, paramètres initiaux, bonnes pratiques de nommage.
+> Choisir le bon type de projet, configurer les paramètres initiaux et adopter de bonnes conventions dès le départ.
 
-::: {.callout-note}
-## Fiche en cours de rédaction
-Cette fiche est en construction. [Contribuez sur GitLab !](https://gitlab.institutionnel.org/redcap-guide-fr/-/issues/new)
+## Types de projets
+
+Lors de la création, REDCap propose plusieurs types de projets :
+
+| Type | Description | Cas d'usage |
+|---|---|---|
+| **Database / Biorepository** | Projet simple, sans notion de visite | Registre, biobanque |
+| **Classic** | Projet standard, un seul bras | Étude transversale, base de données simple |
+| **Longitudinal** | Plusieurs événements (visites) par participant | Essai clinique, cohorte de suivi |
+| **Survey** | Questionnaire public sans authentification | Enquête en population générale |
+
+::: {.callout-tip}
+## Conseil
+Pour un essai clinique multicentrique, choisissez toujours **Longitudinal** même si votre protocole est simple — vous pourrez toujours n'utiliser qu'un seul événement, et la structure est bien plus difficile à changer après coup.
 :::
 
-## Introduction
+---
 
-*(À rédiger)*
+## Créer un projet pas à pas
+
+1. Sur la page d'accueil REDCap, cliquer sur **+ New Project**
+2. Renseigner les champs obligatoires :
+   - **Project title** : nom complet et explicite
+   - **Purpose** : choisir *Research* pour un essai clinique
+   - **Project type** : voir tableau ci-dessus
+3. Cliquer sur **Create Project**
+
+REDCap vous redirige vers le **Project Setup**, point de départ de toute la configuration.
+
+---
+
+## Conventions de nommage
+
+Un bon nom de projet facilite la gestion sur le long terme, surtout pour l'administrateur système qui gère des dizaines de projets.
+
+### Recommandations
+
+- Inclure l'acronyme de l'étude : `ACCESS_PLUS`, `CAPTHAI`
+- Préciser l'objet si le projet est satellitaire : `ACCESS_PLUS_Pharmacovigilance`
+- Éviter les accents, espaces et caractères spéciaux dans l'identifiant court
+- Inclure l'année de création si plusieurs versions : `ACCESS_PLUS_2024`
+
+### Exemples
+
+| ❌ À éviter | ✅ Recommandé |
+|---|---|
+| `Projet test` | `ACCESS_PLUS_DEV` |
+| `Base VIH 2` | `COHVIHCAM_2024` |
+| `Pharmaco` | `ACCESS_PLUS_EIG` |
+
+---
+
+## Paramètres initiaux importants
+
+### Project Setup — sections clés
+
+**Main project settings**
+- Cocher **Use longitudinal data collection** si projet longitudinal
+- Cocher **Use surveys** si vous avez des formulaires en auto-saisie patient
+- Cocher **Use Data Access Groups** si étude multicentrique → voir [Fiche DAG](data-access-groups.qmd)
+
+**Optional modules**
+- **Repeating instruments and events** : à activer si certains formulaires se répètent (ex. visites non planifiées, effets indésirables)
+- **Auto-numbering for records** : à activer pour générer les identifiants automatiquement
+
+::: {.callout-important}
+## Activer les modules avant de saisir des données
+Certains modules (DAG, instruments répétables, longitudinal) sont très difficiles à activer une fois des données saisies. Anticipez votre architecture dès la création.
+:::
+
+---
+
+## Statuts d'un projet
+
+Un projet REDCap passe par trois statuts :
+
+```
+Development → Production → Archived
+```
+
+| Statut | Description |
+|---|---|
+| **Development** | Phase de construction — modifications libres du dictionnaire |
+| **Production** | Données réelles — toute modification du dictionnaire nécessite une approbation |
+| **Archived** | Projet fermé — lecture seule |
+
+::: {.callout-warning}
+## Ne pas saisir de vraies données en Development
+Le statut Development est réservé aux tests. Les données saisies peuvent être supprimées lors du passage en Production si vous choisissez de vider le projet.
+:::
+
+---
+
+## Copier un projet existant
+
+Si votre nouveau projet est similaire à un projet existant, REDCap permet de le copier :
+
+1. Page d'accueil → **+ New Project**
+2. Onglet **Copy an existing REDCap project**
+3. Sélectionner le projet source
+4. Choisir ce que vous souhaitez copier (instruments, rapports, droits utilisateurs…)
+
+Utile pour créer une version de test d'un projet en production, ou pour démarrer un nouvel essai sur la base d'un protocole similaire.
+
+---
 
 ## Références
 
-- [Documentation REDCap Community](https://community.projectredcap.org/)
+- [Fiche : Concevoir un dictionnaire de données](dictionnaire-donnees.qmd)
+- [Fiche : Projets longitudinaux](projet-longitudinal.qmd)
+- [Fiche : Data Access Groups](data-access-groups.qmd)
+- [Fiche : Gestion des projets et statuts](gestion-projets-statuts.qmd)

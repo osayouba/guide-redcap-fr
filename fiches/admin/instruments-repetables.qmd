@@ -1,16 +1,154 @@
 # Instruments répétables
 
-> Configuration, export, cas d'usage.
+> Les instruments répétables permettent de saisir plusieurs occurrences d'un même formulaire pour un participant, au sein d'un même événement. Indispensables pour la pharmacovigilance, les visites non planifiées ou les données biologiques sériées.
+
+## Quand utiliser un instrument répétable ?
+
+| Cas d'usage | Exemple |
+|---|---|
+| Effets indésirables | Plusieurs EI par patient, saisis au fil du temps |
+| Médicaments concomitants | Liste de traitements en cours |
+| Hospitalisations | Plusieurs séjours hospitaliers |
+| Prélèvements biologiques | Plusieurs prélèvements par visite |
+| Visites non planifiées | Visites supplémentaires hors calendrier |
 
 ::: {.callout-note}
-## Fiche en cours de rédaction
-Cette fiche est en construction. [Contribuez sur GitLab !](https://gitlab.institutionnel.org/redcap-guide-fr/-/issues/new)
+## Répétition d'instrument vs répétition d'événement
+- **Instrument répétable** : le formulaire se répète au sein d'un même événement (ex. plusieurs EI à la visite M3)
+- **Événement répétable** : l'événement entier (avec tous ses instruments) se répète (ex. plusieurs visites non planifiées)
+Les deux peuvent coexister dans un même projet.
 :::
 
-## Introduction
+---
 
-*(À rédiger)*
+## Activer les instruments répétables
+
+1. **Project Setup → Optional Modules**
+2. Cocher **Repeating Instruments and Events**
+3. Cliquer sur **Save**
+4. Aller dans **Project Setup → Repeating Instruments and Events**
+5. Pour chaque événement concerné, sélectionner les instruments à rendre répétables
+
+---
+
+## Interface de saisie
+
+En mode répétable, la fiche patient affiche un **tableau des instances** pour chaque instrument répétable :
+
+| Instance | Date EI | Type | Statut |
+|---|---|---|---|
+| #1 | 2024-03-15 | Nausées | Complet |
+| #2 | 2024-04-02 | Céphalées | Incomplet |
+| **+ Ajouter une instance** | | | |
+
+Chaque instance est indépendante et possède son propre statut de complétion.
+
+---
+
+## Structure des données à l'export
+
+À l'export, les instances répétables génèrent des lignes supplémentaires avec deux colonnes spéciales :
+
+| Colonne | Description |
+|---|---|
+| `redcap_repeat_instrument` | Nom de l'instrument répété |
+| `redcap_repeat_instance` | Numéro de l'instance (1, 2, 3…) |
+
+**Exemple de structure CSV :**
+
+```
+record_id | redcap_event_name  | redcap_repeat_instrument | redcap_repeat_instance | ei_date   | ei_type
+001       | inclusion_j0_arm_1 |                          |                        | 2024-01-10|
+001       | inclusion_j0_arm_1 | effet_indesirable        | 1                      | 2024-03-15| Nausées
+001       | inclusion_j0_arm_1 | effet_indesirable        | 2                      | 2024-04-02| Céphalées
+```
+
+Les lignes sans `redcap_repeat_instrument` correspondent aux instruments non répétables de l'événement.
+
+---
+
+## Traitement en R
+
+```r
+library(REDCapR)
+library(dplyr)
+
+ds <- redcap_read(
+  redcap_uri = Sys.getenv("REDCAP_URI"),
+  token      = Sys.getenv("REDCAP_TOKEN")
+)$data
+
+# Isoler les données des instruments répétables (EI)
+ds_ei <- ds |>
+  filter(redcap_repeat_instrument == "effet_indesirable") |>
+  select(record_id, redcap_repeat_instance,
+         ei_date, ei_type, ei_grade, ei_lien_causalite)
+
+# Compter le nombre d'EI par patient
+nb_ei <- ds_ei |>
+  group_by(record_id) |>
+  summarise(n_ei = n())
+
+# Isoler les données non répétables (une ligne par patient × événement)
+ds_base <- ds |>
+  filter(is.na(redcap_repeat_instrument) | redcap_repeat_instrument == "")
+```
+
+::: {.callout-tip}
+## Filtrer au moment de l'export API
+Pour les grands projets, exportez uniquement les instruments répétables qui vous intéressent en utilisant le paramètre `forms` de `redcap_read()` :
+
+```r
+ds_ei <- redcap_read(
+  redcap_uri = Sys.getenv("REDCAP_URI"),
+  token      = Sys.getenv("REDCAP_TOKEN"),
+  forms      = "effet_indesirable"
+)$data
+```
+:::
+
+---
+
+## Importer des données répétables via l'API
+
+Pour importer des instances répétables, le fichier d'import doit inclure les colonnes `redcap_repeat_instrument` et `redcap_repeat_instance` :
+
+```r
+donnees_ei <- data.frame(
+  record_id                = c("001", "001", "002"),
+  redcap_event_name        = c("inclusion_j0_arm_1", "inclusion_j0_arm_1", "inclusion_j0_arm_1"),
+  redcap_repeat_instrument = c("effet_indesirable", "effet_indesirable", "effet_indesirable"),
+  redcap_repeat_instance   = c(1, 2, 1),
+  ei_date                  = c("2024-03-15", "2024-04-02", "2024-03-20"),
+  ei_type                  = c("Nausées", "Céphalées", "Fatigue")
+)
+
+redcap_write(
+  ds_to_write = donnees_ei,
+  redcap_uri  = Sys.getenv("REDCAP_URI"),
+  token       = Sys.getenv("REDCAP_TOKEN")
+)
+```
+
+---
+
+## Limites et points d'attention
+
+::: {.callout-warning}
+## Suppression d'une instance
+La suppression d'une instance répétable est définitive. Elle ne peut pas être annulée via l'interface. L'audit trail conserve une trace de l'opération.
+:::
+
+- Les **champs calculés** ne peuvent pas faire référence à une instance spécifique d'un instrument répétable
+- Les **rapports REDCap** incluent les instances répétables — pensez à filtrer sur `redcap_repeat_instrument` si nécessaire
+- Le **Data Quality** peut générer des alertes sur chaque instance indépendamment
+- La numérotation des instances est **séquentielle et permanente** : si l'instance #2 est supprimée, elle ne sera pas réattribuée — la suivante sera #3
+
+---
 
 ## Références
 
-- [Documentation REDCap Community](https://community.projectredcap.org/)
+- [Fiche : Projets longitudinaux](projet-longitudinal.qmd)
+- [Fiche : Créer un projet REDCap](creer-projet.qmd)
+- [Fiche : Export et API REDCap](../api-r/api-introduction.qmd)
+- [Fiche : Règles de qualité des données](../data-manager/data-quality.qmd)

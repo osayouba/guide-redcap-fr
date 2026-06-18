@@ -1,11 +1,11 @@
-# REDCap Guide FR {.unnumbered}
+# Guide REDCap {.unnumbered}
 
 ::: {.callout-note}
 ## Documentation en construction
 Ce guide est une documentation collaborative et évolutive. Les contributions sont les bienvenues via les boutons **Edit this page** et **Report an issue** en haut de chaque fiche.
 :::
 
-Le projet **REDCap Guide FR** est une documentation collaborative sur l'utilisation de [REDCap](https://projectredcap.org/) *(Research Electronic Data Capture)* dans un contexte de **recherche clinique francophone**.
+Le projet **Guide REDCap** est une documentation collaborative sur l'utilisation de [REDCap](https://projectredcap.org/) *(Research Electronic Data Capture)* dans un contexte de **recherche clinique francophone**.
 
 Il s'adresse à tous les profils impliqués dans la gestion de données cliniques :
 

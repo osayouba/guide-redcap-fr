@@ -3,14 +3,14 @@ project:
   output-dir: _site
 
 book:
-  title: "REDCap Guide FR"
+  title: "Guide REDCap"
   subtitle: "Documentation collaborative REDCap en français"
-  author: "Contributeurs REDCap Guide FR"
+  author: "Contributeurs & Admins IRD REDCap"
   date: today
   date-format: "DD MMMM YYYY"
   language: fr
   favicon: resources/favicon.ico
-  repo-url: https://gitlab.institutionnel.org/redcap-guide-fr
+  repo-url: https://forge.ird.fr/transvihmi/souedraogo/redcap-guide-fr
   repo-actions: [edit, issue]
   search: true
   sidebar:
@@ -35,6 +35,7 @@ book:
 
     - part: "👥 Accès et saisie"
       chapters:
+        - fiches/admin/creer-utilisateur.qmd      
         - fiches/admin/gestion-utilisateurs.qmd
         - fiches/admin/data-access-groups.qmd
         - fiches/admin/droits-roles.qmd
