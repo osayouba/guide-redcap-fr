@@ -24,11 +24,11 @@ a\) Pour les utilisateurs avec une adresse mail de la fédération RENATER (pers
 
 - Cliquer sur Le logo de la Fédération par Renater
 
-![](images/clipboard-790636329.png)
+![](images/login-renater.png)
 
 - Renseigner son adresse mail et mot de passe professionnel pour le personnel IRD (1) et les autres utilisateurs de la fédération RENARER (2). Les utilisateurs hors Fédération RENATER doivent cliquer sur le bouton Compte CRU (3) :
 
-![](images/clipboard-464152999.png)
+![](images/login-page.png)
 
 Les utilisateurs hors Fédération RENATER doivent créer un compte CRU afin d'avoir accès à IRD REDCap. Pour ce faire:
 
@@ -36,7 +36,7 @@ Les utilisateurs hors Fédération RENATER doivent créer un compte CRU afin d'a
 
 Se créer un compte –\> Activer votre compte –\> Mot de passe oublié?
 
-![](images/clipboard-186674941.png)
+![](images/compte-cru.png)
 
 A chaque étape, vous recevez un mail pour la suite. Une fois le mot de passe crée, l'utilisateur peut se connecter à IRD à partir su bouton (3).
 
