@@ -1,0 +1,93 @@
+project:
+  type: book
+  output-dir: _site
+
+book:
+  title: "REDCap Guide FR"
+  subtitle: "Documentation collaborative REDCap en français"
+  author: "Contributeurs REDCap Guide FR"
+  date: today
+  date-format: "DD MMMM YYYY"
+  language: fr
+  favicon: resources/favicon.ico
+  repo-url: https://gitlab.institutionnel.org/redcap-guide-fr
+  repo-actions: [edit, issue]
+  search: true
+  sidebar:
+    style: docked
+    background: light
+
+  chapters:
+    - index.qmd
+
+    - part: "🚀 Démarrer"
+      chapters:
+        - fiches/admin/presentation.qmd
+        - fiches/admin/comment-utiliser.qmd
+
+    - part: "🏗️ Concevoir un projet"
+      chapters:
+        - fiches/admin/creer-projet.qmd
+        - fiches/admin/dictionnaire-donnees.qmd
+        - fiches/admin/branching-logic.qmd
+        - fiches/admin/projet-longitudinal.qmd
+        - fiches/admin/instruments-repetables.qmd
+
+    - part: "👥 Accès et saisie"
+      chapters:
+        - fiches/admin/gestion-utilisateurs.qmd
+        - fiches/admin/data-access-groups.qmd
+        - fiches/admin/droits-roles.qmd
+        - fiches/investigateur/saisie-donnees.qmd
+        - fiches/investigateur/survey-econsent.qmd
+
+    - part: "✅ Qualité des données"
+      chapters:
+        - fiches/data-manager/data-quality.qmd
+        - fiches/data-manager/queries-drw.qmd
+        - fiches/data-manager/double-saisie.qmd
+
+    - part: "📤 Exporter et exploiter"
+      chapters:
+        - fiches/data-manager/export-interface.qmd
+        - fiches/api-r/api-introduction.qmd
+        - fiches/api-r/redcapr.qmd
+        - fiches/api-r/monitoring-dashboard.qmd
+
+    - part: "⚙️ Automatiser"
+      chapters:
+        - fiches/admin/alerts-notifications.qmd
+        - fiches/admin/automated-survey-invitations.qmd
+        - fiches/admin/champs-calcules-pipes.qmd
+        - fiches/api-r/import-export-xml.qmd
+
+    - part: "🛠️ Administration système"
+      chapters:
+        - fiches/admin/gestion-projets-statuts.qmd
+        - fiches/admin/personnalisation-interface.qmd
+        - fiches/admin/logs-audit.qmd
+        - fiches/admin/external-modules.qmd
+
+    - part: "📋 Bonnes pratiques"
+      chapters:
+        - fiches/data-manager/nomenclature-variables.qmd
+        - fiches/data-manager/multicentrique.qmd
+        - fiches/admin/validation-systeme.qmd
+
+format:
+  html:
+    theme:
+      light: [flatly, resources/custom.scss]
+      dark: [darkly, resources/custom.scss]
+    code-link: true
+    code-copy: true
+    toc: true
+    toc-depth: 3
+    number-sections: false
+    lang: fr
+    highlight-style: github
+
+execute:
+  freeze: auto
+  echo: true
+  warning: false

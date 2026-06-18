@@ -1,0 +1,25 @@
+# Quarto
+_site/
+.quarto/
+*.quarto_ipynb
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# Cache Quarto/knitr
+*_cache/
+*_files/
+
+# Données sensibles — ne jamais committer
+data/cache_*.rds
+data/raw/
+.Renviron
+*.token
+*.key
+
+# OS
+.DS_Store
+Thumbs.db

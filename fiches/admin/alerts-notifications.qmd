@@ -1,0 +1,16 @@
+# Alerts & Notifications
+
+> Conditions de déclenchement, destinataires, Smart Variables.
+
+::: {.callout-note}
+## Fiche en cours de rédaction
+Cette fiche est en construction. [Contribuez sur GitLab !](https://gitlab.institutionnel.org/redcap-guide-fr/-/issues/new)
+:::
+
+## Introduction
+
+*(À rédiger)*
+
+## Références
+
+- [Documentation REDCap Community](https://community.projectredcap.org/)

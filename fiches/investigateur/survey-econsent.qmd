@@ -1,0 +1,16 @@
+# Surveys et e-Consent
+
+> Création d'une enquête, partage, consentement électronique.
+
+::: {.callout-note}
+## Fiche en cours de rédaction
+Cette fiche est en construction. [Contribuez sur GitLab !](https://gitlab.institutionnel.org/redcap-guide-fr/-/issues/new)
+:::
+
+## Introduction
+
+*(À rédiger)*
+
+## Références
+
+- [Documentation REDCap Community](https://community.projectredcap.org/)

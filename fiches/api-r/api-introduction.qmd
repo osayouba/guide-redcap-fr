@@ -1,0 +1,192 @@
+# Utiliser l'API REDCap
+
+## Qu'est-ce que l'API REDCap ?
+
+L'API *(Application Programming Interface)* de REDCap permet d'interagir avec un projet REDCap **depuis un script externe** — typiquement R, Python ou curl — sans passer par l'interface web. Elle est indispensable pour :
+
+- automatiser des exports de données (monitoring, rapports périodiques)
+- importer des données en masse depuis un système externe
+- intégrer REDCap dans un pipeline d'analyse reproductible
+
+::: {.callout-important}
+## Prérequis
+L'accès à l'API doit être **activé par l'administrateur REDCap** pour chaque utilisateur, dans les droits d'accès du projet (*User Rights → API → Export / Import*).
+:::
+
+---
+
+## Obtenir son token API
+
+Le token est une clé d'authentification unique par utilisateur et par projet. Pour le récupérer :
+
+1. Ouvrir le projet REDCap concerné
+2. Aller dans **API** (menu de gauche)
+3. Cliquer sur **Generate API Token** (si non encore généré)
+4. Copier le token (32 caractères hexadécimaux)
+
+::: {.callout-warning}
+## Sécurité du token
+Le token API donne un accès direct aux données du projet, **sans interface de connexion**. Ne le partagez pas, ne le committez jamais dans Git. Stockez-le dans un fichier `.Renviron` ou un gestionnaire de secrets.
+:::
+
+---
+
+## Stocker le token de façon sécurisée (R)
+
+La méthode recommandée est de stocker le token dans `.Renviron` :
+
+```r
+# Ouvrir le fichier .Renviron
+usethis::edit_r_environ()
+```
+
+Ajouter la ligne suivante dans le fichier :
+
+```
+REDCAP_TOKEN_MONPROJET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Puis récupérer le token dans vos scripts :
+
+```r
+token <- Sys.getenv("REDCAP_TOKEN_MONPROJET")
+```
+
+---
+
+## Les endpoints principaux
+
+L'URL de base de l'API est propre à chaque instance REDCap, par exemple :
+
+```
+https://redcap.mon-institution.fr/api/
+```
+
+Tous les appels sont des requêtes **POST** vers cette URL avec différents paramètres `content` :
+
+| `content` | Description |
+|---|---|
+| `record` | Exporter / importer des enregistrements |
+| `metadata` | Exporter le dictionnaire de données |
+| `report` | Exporter un rapport REDCap existant |
+| `user` | Lister les utilisateurs du projet |
+| `dag` | Lister les Data Access Groups |
+| `event` | Lister les événements (projets longitudinaux) |
+| `instrument` | Lister les instruments |
+| `exportFieldNames` | Noms des champs à l'export |
+| `version` | Version de REDCap |
+
+---
+
+## Utilisation avec REDCapR {#sec-redcapr}
+
+Le package [`REDCapR`](https://ouhscbbmc.github.io/REDCapR/) est la solution recommandée en R. Il encapsule les appels API dans des fonctions lisibles et gère les erreurs proprement.
+
+```r
+install.packages("REDCapR")
+library(REDCapR)
+```
+
+### Exporter tous les enregistrements
+
+```r
+ds <- redcap_read(
+  redcap_uri  = "https://redcap.mon-institution.fr/api/",
+  token       = Sys.getenv("REDCAP_TOKEN_MONPROJET")
+)$data
+```
+
+### Exporter un rapport existant
+
+```r
+ds_rapport <- redcap_report(
+  redcap_uri  = "https://redcap.mon-institution.fr/api/",
+  token       = Sys.getenv("REDCAP_TOKEN_MONPROJET"),
+  report_id   = 1234  # ID du rapport REDCap
+)$data
+```
+
+### Filtrer par champs et événements
+
+```r
+ds_screening <- redcap_read(
+  redcap_uri    = "https://redcap.mon-institution.fr/api/",
+  token         = Sys.getenv("REDCAP_TOKEN_MONPROJET"),
+  fields        = c("record_id", "date_inclusion", "site"),
+  events        = "screening_arm_1",
+  raw_or_label  = "label"   # retourne les labels plutôt que les codes
+)$data
+```
+
+### Importer des données
+
+```r
+donnees_a_importer <- data.frame(
+  record_id = c("001", "002"),
+  visite_date = c("2024-03-01", "2024-03-05")
+)
+
+redcap_write(
+  ds_to_write = donnees_a_importer,
+  redcap_uri  = "https://redcap.mon-institution.fr/api/",
+  token       = Sys.getenv("REDCAP_TOKEN_MONPROJET")
+)
+```
+
+---
+
+## Mise en cache des appels API
+
+Dans un dashboard de monitoring consulté fréquemment, il est conseillé de **mettre en cache** les exports pour ne pas surcharger le serveur REDCap.
+
+```r
+library(REDCapR)
+
+# Chemin du cache
+cache_file <- "data/cache_redcap.rds"
+cache_duree <- 3600  # 1 heure en secondes
+
+charger_donnees <- function() {
+  if (file.exists(cache_file)) {
+    age <- as.numeric(difftime(Sys.time(),
+                               file.mtime(cache_file),
+                               units = "secs"))
+    if (age < cache_duree) {
+      message("Chargement depuis le cache (", round(age / 60), " min)")
+      return(readRDS(cache_file))
+    }
+  }
+
+  message("Export REDCap en cours...")
+  ds <- redcap_read(
+    redcap_uri = Sys.getenv("REDCAP_URI"),
+    token      = Sys.getenv("REDCAP_TOKEN_MONPROJET")
+  )$data
+
+  saveRDS(ds, cache_file)
+  ds
+}
+
+donnees <- charger_donnees()
+```
+
+---
+
+## Erreurs fréquentes
+
+| Message d'erreur | Cause probable | Solution |
+|---|---|---|
+| `ERROR: You do not have permissions` | API non activée pour cet utilisateur | Vérifier *User Rights → API* |
+| `ERROR: The token is not valid` | Token incorrect ou expiré | Régénérer le token dans l'interface |
+| `ERROR: Report ID not found` | ID de rapport inexistant | Vérifier l'ID dans *Reports* |
+| Données vides pour un événement | Événement absent de la matrice | Vérifier la *Designate Instruments* matrix |
+| Timeout sur grands projets | Export trop volumineux | Utiliser `batch_size` dans `redcap_read()` |
+
+---
+
+## Références
+
+- [Documentation officielle de l'API REDCap](https://projectredcap.org/resources/videos/) *(Playground API disponible dans chaque projet)*
+- [REDCapR — Documentation du package](https://ouhscbbmc.github.io/REDCapR/)
+- [Fiche : Monitoring avec R Markdown](monitoring-dashboard.qmd)
+- [Fiche : Import/Export XML (CDISC ODM)](import-export-xml.qmd)

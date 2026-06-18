@@ -1,0 +1,46 @@
+# REDCap Guide FR {.unnumbered}
+
+::: {.callout-note}
+## Documentation en construction
+Ce guide est une documentation collaborative et évolutive. Les contributions sont les bienvenues via les boutons **Edit this page** et **Report an issue** en haut de chaque fiche.
+:::
+
+Le projet **REDCap Guide FR** est une documentation collaborative sur l'utilisation de [REDCap](https://projectredcap.org/) *(Research Electronic Data Capture)* dans un contexte de **recherche clinique francophone**.
+
+Il s'adresse à tous les profils impliqués dans la gestion de données cliniques :
+
+| Public | Ce qu'il trouvera ici |
+|---|---|
+| 🛠️ **Administrateurs REDCap** | Configuration système, gestion des projets, modules |
+| 📋 **Data managers / ARC** | Qualité des données, queries, export, bonnes pratiques |
+| 💻 **Biostatisticiens / R** | API REDCap, REDCapR, dashboards R Markdown |
+| 🩺 **Investigateurs** | Saisie, enquêtes, accès aux formulaires |
+
+## Comment lire ce guide
+
+Chaque fiche est **autonome** : vous pouvez la consulter indépendamment sans lire le guide dans l'ordre. Les fiches sont organisées par grandes thématiques accessibles depuis le menu de gauche.
+
+Les fiches contiennent systématiquement :
+
+- Une **présentation du concept** et de son utilité
+- Des **captures d'écran** ou schémas explicatifs
+- Des **exemples concrets** tirés de projets réels
+- Des **points d'attention** et erreurs fréquentes
+- Des **références** vers la documentation officielle REDCap
+
+## Contribuer
+
+Ce guide est hébergé sur GitLab. Pour proposer une correction ou une nouvelle fiche :
+
+1. Cliquez sur **Edit this page** en haut de la fiche concernée
+2. Effectuez vos modifications dans l'éditeur GitLab
+3. Soumettez une *Merge Request*
+
+Pour signaler un problème ou suggérer un sujet, utilisez le bouton **Report an issue**.
+
+## À propos de REDCap
+
+REDCap est un logiciel de gestion de données de recherche développé par le Vanderbilt University Medical Center. Il est utilisé par plus de 7 000 institutions dans le monde. L'accès à REDCap se fait via un consortium institutionnel — renseignez-vous auprès de votre DSI ou DRC.
+
+- Site officiel : [projectredcap.org](https://projectredcap.org/)
+- Communauté : [community.projectredcap.org](https://community.projectredcap.org/) *(accès réservé aux membres du consortium)*

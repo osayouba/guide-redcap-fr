@@ -1,0 +1,70 @@
+# Pipeline GitLab CI/CD — REDCap Guide FR
+# Déclenché à chaque push sur la branche main
+# Publie le site via GitLab Pages
+
+image: rocker/r-ver:4.4.0
+
+stages:
+  - build
+  - deploy
+
+variables:
+  QUARTO_VERSION: "1.5.57"
+
+# ─── Cache des packages R ────────────────────────────────────────────────────
+cache:
+  key: r-packages-${CI_COMMIT_REF_SLUG}
+  paths:
+    - renv/library/
+
+# ─── Étape 1 : Build ─────────────────────────────────────────────────────────
+build:
+  stage: build
+  before_script:
+    # Installer les dépendances système nécessaires à Quarto
+    - apt-get update -qq && apt-get install -y --no-install-recommends
+        curl wget gdebi-core libcurl4-openssl-dev libssl-dev libxml2-dev
+        pandoc
+
+    # Installer Quarto
+    - wget -q "https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb"
+    - gdebi --non-interactive "quarto-${QUARTO_VERSION}-linux-amd64.deb"
+    - quarto --version
+
+    # Installer les packages R nécessaires
+    - >
+      Rscript -e "
+        pkgs <- c('rmarkdown', 'knitr', 'REDCapR', 'dplyr', 'ggplot2',
+                  'plotly', 'flexdashboard', 'DT', 'lubridate')
+        install.packages(pkgs,
+                         repos = 'https://cloud.r-project.org',
+                         quiet = TRUE)
+      "
+
+  script:
+    - quarto render --output-dir _site
+
+  artifacts:
+    paths:
+      - _site/
+    expire_in: 1 hour
+
+  only:
+    - main
+    - merge_requests   # prévisualiser les MR avant fusion
+
+# ─── Étape 2 : Deploy (GitLab Pages) ─────────────────────────────────────────
+pages:
+  stage: deploy
+  script:
+    - mv _site public
+
+  artifacts:
+    paths:
+      - public
+
+  dependencies:
+    - build
+
+  only:
+    - main   # ne déployer que depuis main, pas les MR

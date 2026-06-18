@@ -1,0 +1,103 @@
+# Data Access Groups (DAG)
+
+## Principe
+
+Les **Data Access Groups** (DAG) sont le mécanisme REDCap permettant de **cloisonner les données entre plusieurs sites** au sein d'un même projet. Ils sont indispensables dans les études multicentriques pour garantir que chaque site ne voit que ses propres données.
+
+::: {.callout-note}
+## Cas d'usage typique
+Un essai multicentrique avec des centres à Douala, Yaoundé et Dakar : chaque centre est un DAG. Les utilisateurs de Douala ne voient pas les patients de Yaoundé, mais le coordonnateur central voit tout.
+:::
+
+---
+
+## Activer les DAG
+
+1. Ouvrir le projet → menu **Project Setup**
+2. Section *Optional Modules and Customizations*
+3. Cocher **Use Data Access Groups**
+4. Cliquer sur **Save**
+
+---
+
+## Créer et nommer les DAG
+
+1. Aller dans **DAGs** (menu de gauche, section *Applications*)
+2. Saisir le nom du DAG dans le champ prévu
+3. Cliquer sur **Add Group**
+
+::: {.callout-tip}
+## Convention de nommage
+Utilisez des noms courts et sans accents ni espaces pour le **DAG unique name** (généré automatiquement). Le nom affiché peut être plus lisible. Exemple :
+- Unique name : `douala_hgoped`  
+- Display name : `Douala – HGO PED`
+:::
+
+---
+
+## Affecter un utilisateur à un DAG
+
+1. Aller dans **User Rights**
+2. Cliquer sur le nom de l'utilisateur
+3. Dans la section **Data Access Group**, sélectionner le DAG
+4. Cliquer sur **Save Changes**
+
+Un utilisateur sans DAG affecté voit **toutes les données** (réservé aux coordinateurs centraux et administrateurs).
+
+---
+
+## Comportement des DAG à l'export
+
+### Via l'interface
+Lors d'un export CSV, la colonne `redcap_data_access_group` est incluse si l'option est cochée. Elle contient le **unique name** du DAG.
+
+### Via l'API (R)
+```r
+library(REDCapR)
+
+ds <- redcap_read(
+  redcap_uri            = Sys.getenv("REDCAP_URI"),
+  token                 = Sys.getenv("REDCAP_TOKEN"),
+  export_data_access_groups = TRUE   # inclure la colonne DAG
+)$data
+
+# Vérifier la répartition par DAG
+table(ds$redcap_data_access_group)
+```
+
+---
+
+## DAG et Smart Variables
+
+Dans les alertes, les champs calculés et les rapports, les Smart Variables liées aux DAG permettent de personnaliser les contenus selon le site :
+
+| Smart Variable | Valeur retournée |
+|---|---|
+| `[dag-name]` | Unique name du DAG de l'enregistrement |
+| `[user-dag-name]` | DAG de l'utilisateur connecté |
+| `[dag-label]` | Label affiché du DAG |
+
+**Exemple d'usage dans une alerte :** envoyer un email uniquement au référent du site concerné en filtrant sur `[dag-name] = "douala_hgoped"`.
+
+---
+
+## Limites et points d'attention
+
+::: {.callout-warning}
+## Changer le DAG d'un enregistrement
+Il est possible de déplacer un enregistrement d'un DAG à un autre, mais cette opération est **irréversible via l'interface** et doit être faite avec précaution. Elle est possible via l'API (champ `redcap_data_access_group` à l'import).
+:::
+
+- Un enregistrement ne peut appartenir qu'à **un seul DAG** à la fois
+- Les DAG ne sont pas des sous-projets : les instruments et événements sont communs à tous les sites
+- Les rapports REDCap filtrent automatiquement par DAG selon l'utilisateur connecté
+- Les **Survey** publics ne sont pas filtrés par DAG (les répondants anonymes n'ont pas de DAG)
+
+---
+
+## Références
+
+- [Fiche : Gestion des utilisateurs](gestion-utilisateurs.qmd)
+- [Fiche : Droits et rôles utilisateurs](droits-roles.qmd)
+- [Fiche : Monitoring multicentrique avec R](../api-r/monitoring-dashboard.qmd)
+- Documentation REDCap Community : *Data Access Groups* (section *Project Setup*)
