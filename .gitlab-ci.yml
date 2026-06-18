@@ -50,7 +50,7 @@ build:
     expire_in: 1 hour
 
   only:
-    - main
+    - master
     - merge_requests   # prévisualiser les MR avant fusion
 
 # ─── Étape 2 : Deploy (GitLab Pages) ─────────────────────────────────────────
