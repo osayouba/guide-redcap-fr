@@ -22,6 +22,7 @@ redcap-guide-fr/
 │   ├── api-r/                   # Fiches API et intégration R
 │   └── investigateur/           # Fiches à destination des investigateurs
 └── .gitlab-ci.yml               # Pipeline CI/CD → GitLab Pages
+
 ```
 
 ## Prérequis locaux
