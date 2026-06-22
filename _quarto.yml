@@ -1,10 +1,10 @@
 project:
   type: book
-  output-dir: _site
+  output-dir: _book
 
 book:
   title: "Guide REDCap"
-  subtitle: "Documentation collaborative REDCap en français"
+  subtitle: "Documentation collaborative REDCap en franÃ§ais"
   author: "Contributeurs & Admins IRD REDCap"
   date: today
   date-format: "DD MMMM YYYY"
@@ -20,12 +20,12 @@ book:
   chapters:
     - index.qmd
 
-    - part: "🚀 Démarrer"
+    - part: "ðŸš€ DÃ©marrer"
       chapters:
         - fiches/admin/presentation.qmd
         - fiches/admin/comment-utiliser.qmd
 
-    - part: "🏗️ Concevoir un projet"
+    - part: "ðŸ—ï¸ Concevoir un projet"
       chapters:
         - fiches/admin/creer-projet.qmd
         - fiches/admin/dictionnaire-donnees.qmd
@@ -33,7 +33,7 @@ book:
         - fiches/admin/projet-longitudinal.qmd
         - fiches/admin/instruments-repetables.qmd
 
-    - part: "👥 Accès et saisie"
+    - part: "ðŸ‘¥ AccÃ¨s et saisie"
       chapters:
         - fiches/admin/creer-utilisateur.qmd      
         - fiches/admin/gestion-utilisateurs.qmd
@@ -42,34 +42,34 @@ book:
         - fiches/investigateur/saisie-donnees.qmd
         - fiches/investigateur/survey-econsent.qmd
 
-    - part: "✅ Qualité des données"
+    - part: "âœ… QualitÃ© des donnÃ©es"
       chapters:
         - fiches/data-manager/data-quality.qmd
         - fiches/data-manager/queries-drw.qmd
         - fiches/data-manager/double-saisie.qmd
 
-    - part: "📤 Exporter et exploiter"
+    - part: "ðŸ“¤ Exporter et exploiter"
       chapters:
         - fiches/data-manager/export-interface.qmd
         - fiches/api-r/api-introduction.qmd
         - fiches/api-r/redcapr.qmd
         - fiches/api-r/monitoring-dashboard.qmd
 
-    - part: "⚙️ Automatiser"
+    - part: "âš™ï¸ Automatiser"
       chapters:
         - fiches/admin/alerts-notifications.qmd
         - fiches/admin/automated-survey-invitations.qmd
         - fiches/admin/champs-calcules-pipes.qmd
         - fiches/api-r/import-export-xml.qmd
 
-    - part: "🛠️ Administration système"
+    - part: "ðŸ› ï¸ Administration systÃ¨me"
       chapters:
         - fiches/admin/gestion-projets-statuts.qmd
         - fiches/admin/personnalisation-interface.qmd
         - fiches/admin/logs-audit.qmd
         - fiches/admin/external-modules.qmd
 
-    - part: "📋 Bonnes pratiques"
+    - part: "ðŸ“‹ Bonnes pratiques"
       chapters:
         - fiches/data-manager/nomenclature-variables.qmd
         - fiches/data-manager/multicentrique.qmd
